@@ -1,0 +1,133 @@
+C51 COMPILER V9.57.0.0   LCD1602                                                           04/04/2022 12:58:41 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE LCD1602
+OBJECT MODULE PLACED IN .\Objects\LCD1602.obj
+COMPILER INVOKED BY: D:\Simulation\ARM\Keil_v5\C51\BIN\C51.EXE LCD1602.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRI
+                    -NT(.\Listings\LCD1602.lst) TABS(2) OBJECT(.\Objects\LCD1602.obj)
+
+line level    source
+
+   1          #include <LCD1602.h>
+   2          #include "reg51.h" 
+   3              sbit RS = P2^1;
+   4              sbit RW = P2^0;
+   5              sbit EN = P2^2;
+   6              
+   7              sbit RST = P0^3;//HC595复位脚,低电平有效
+   8              sbit OE = P0^4;//HC595输出使能脚,低电平有效。
+   9              sbit DS = P0^1;//HC595串行数据输入脚
+  10              sbit SH_CP = P0^0;//HC595串行数据读取时钟
+  11              sbit ST_CP = P0^2;//HC595串行数据缓存控制脚
+  12              
+  13          void LCD_send(unsigned char i,unsigned char j,unsigned char str[],unsigned char n)
+  14          {
+  15   1        //输入：显示行数i,列数j，输出字符，输出字符长度n
+  16   1        unsigned char x=0;
+  17   1        if(i==1)
+  18   1        {write_com(0x80+j);}
+  19   1        else
+  20   1        {write_com(0x80+0x40+j);}
+  21   1          for(x=0;x<n;x++)
+  22   1          {
+  23   2               write_date(str[x]);
+  24   2              delay(150);
+  25   2          }
+  26   1      }
+  27              
+  28          int LCD_init()//初始化函数体
+  29          {
+  30   1          EN = 0;
+  31   1          write_com(0X38);//设置16*2显示，5*7点阵，8位数据接口
+  32   1          write_com(0X0C);//设置开显示，不显示光标
+  33   1          write_com(0X06);//写一个字符时，整屏右移
+  34   1          write_com(0X01);//显示清零
+  35   1          return 0;
+  36   1      }
+  37          
+  38          int write_com(unsigned char com)//写命令的函数体
+  39          {
+  40   1        char i;
+  41   1          RS = 0;
+  42   1          RW = 0;
+  43   1        
+  44   1      //    P0 = com;//原并口P0赋值数据
+  45   1      
+  46   1        //HC595赋值
+  47   1          OE=1;//关闭HC595输出使能
+  48   1          SH_CP=0;//串行CLK读取信号线置低
+  49   1          ST_CP=0;//缓存CLK信号线置地
+  50   1          
+  51   1          RST=0;//复位HC595
+  52   1          RST=1;
+  53   1        
+  54   1          for(i=0;i<8;i++)//读取八位数据
+C51 COMPILER V9.57.0.0   LCD1602                                                           04/04/2022 12:58:41 PAGE 2   
+
+  55   1          {
+  56   2            DS = com & (0x80>>i);//读一位数据，高位先进
+  57   2            SH_CP=1;//读取时钟，上升沿读取
+  58   2            SH_CP=0;
+  59   2          }
+  60   1          ST_CP=1;//缓存时钟，上升沿缓存
+  61   1          OE=0;//输出8位缓存数据
+  62   1         
+  63   1          delay(5);
+  64   1          EN = 1;
+  65   1          delay(5);
+  66   1          EN = 0;
+  67   1          return 0;
+  68   1      }
+  69          
+  70          int write_date(unsigned char data1)//写数据的函数体
+  71          {
+  72   1        char i;
+  73   1          RS = 1;
+  74   1          RW = 0;
+  75   1          //P0 = data1;
+  76   1          //HC595赋值
+  77   1          OE=1;//关闭HC595输出使能
+  78   1          SH_CP=0;//串行CLK读取信号线置低
+  79   1          ST_CP=0;//缓存CLK信号线置地
+  80   1          RST=0;//复位HC595
+  81   1          RST=1;
+  82   1          for(i=0;i<8;i++)//读取八位数据
+  83   1          {
+  84   2            DS = data1 & (0x80>>i);//读一位数据，高位先进
+  85   2            SH_CP=1;//读取时钟，上升沿读取
+  86   2            SH_CP=0;
+  87   2          }
+  88   1          ST_CP=1;//缓存时钟，上升沿缓存
+  89   1          OE=0;//输出8位缓存数据
+  90   1        
+  91   1        
+  92   1          delay(5);
+  93   1          EN = 1;
+  94   1          delay(5);
+  95   1          EN = 0;
+  96   1          return 0;
+  97   1      }
+  98          
+  99          int delay(unsigned char xms)
+ 100          {
+ 101   1          unsigned char x,y;
+ 102   1          for(x=xms;x>0;x--)
+ 103   1              for(y=110;y>0;y--);
+ 104   1          return 0;
+ 105   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    254    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       7
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V9.57.0.0   LCD1602                                                           04/04/2022 12:58:41 PAGE 3   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
