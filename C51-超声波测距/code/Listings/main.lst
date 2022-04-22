@@ -1,0 +1,64 @@
+C51 COMPILER V9.56.0.0   MAIN                                                              05/16/2021 19:15:47 PAGE 1   
+
+
+C51 COMPILER V9.56.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\keil5_C51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\code) DEBUG OBJECTEXTEND PRI
+                    -NT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <reg51.h>
+   2          #include <intrins.h>
+   3          #include <LCD1602.h>
+   4          #include <srf04.h>
+   5          bit flag;
+   6          void interrupt_Init()   //中断初始化
+   7          {
+   8   1         TMOD=0x01;      //设T0为方式1，GATE=1；
+   9   1         TH0=0;
+  10   1         TL0=0;          
+  11   1         ET0=1;           //允许T0中断
+  12   1         EA=1;         //开启总中断 
+  13   1      }
+  14          
+  15          void main()
+  16          {
+  17   1        unsigned int Distance;
+  18   1        unsigned char Dis_ch[6]="--- cm";
+  19   1        LCD_init();
+  20   1        interrupt_Init();
+  21   1        
+  22   1        LCD_send(1,0,"Distance",8);
+  23   1        
+  24   1        while(1)
+  25   1        {
+  26   2          Distance = Read_srf04();
+  27   2          
+  28   2          Dis_ch[0] = Distance/100 + '0';
+  29   2          Dis_ch[1] = Distance/10 %10 + '0';
+  30   2          Dis_ch[2] = Distance%10 + '0';
+  31   2        
+  32   2          LCD_send(2,8,Dis_ch,6);
+  33   2        }
+  34   1      }
+  35          
+  36          
+  37          void zd0() interrupt 1     //T0中断用来计数器溢出,超过测距范围
+  38          {
+  39   1          flag=1;              //中断溢出标志
+  40   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    133    ----
+   CONSTANT SIZE    =     15    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       8
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

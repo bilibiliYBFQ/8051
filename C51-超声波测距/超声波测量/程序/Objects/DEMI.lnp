@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\DEMI" 
+PRINT(".\Listings\DEMI.m51") RAMSIZE(256) 
