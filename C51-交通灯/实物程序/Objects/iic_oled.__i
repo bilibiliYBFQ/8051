@@ -1,0 +1,1 @@
+"iic_oled.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(..\ÊµÎï³ÌÐò) DEBUG OBJECTEXTEND PRINT(.\Listings\iic_oled.lst) TABS (2) OBJECT(.\Objects\iic_oled.obj)

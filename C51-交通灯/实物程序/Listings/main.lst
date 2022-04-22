@@ -1,0 +1,214 @@
+C51 COMPILER V9.57.0.0   MAIN                                                              08/18/2021 00:35:18 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Simulation\ARM\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\实物程序) DEBUG
+                    - OBJECTEXTEND PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <reg51.h>
+   2          #include "iic_oled.h"
+   3          /*————————————————————
+   4          简易交通灯范例代码
+   5          by—Bilibili@缘不负卿
+   6          配套实物板使用
+   7          —————————————————————*/
+   8          //定义数码管引脚
+   9          #define LED_7s P0
+  10          //定义红黄绿三色交通灯
+  11          sbit R1=P2^2;
+  12          sbit Y1=P2^3;
+  13          sbit G1=P2^4;
+  14          
+  15          sbit R2=P2^5;
+  16          sbit Y2=P2^6;
+  17          sbit G2=P2^7;
+  18          //定义双色人行道灯
+  19          sbit R3=P1^5;
+  20          sbit G3=P1^4;
+  21          
+  22          sbit R4=P1^7;
+  23          sbit G4=P1^6;
+  24          //定义4个按键
+  25          sbit key0=P3^0;
+  26          sbit key1=P3^1;
+  27          sbit key2=P3^2;
+  28          sbit key3=P3^3;
+  29          //定义数码管使能脚
+  30          sbit CS1=P1^0;
+  31          sbit CS2=P1^1;
+  32          sbit CS3=P1^2;
+  33          sbit CS4=P1^3;
+  34          
+  35          unsigned int THHL=65536-50000;//每隔50ms溢出
+  36          unsigned char d=20;//循环20次为1秒
+  37          
+  38          //定义RGB时间长度
+  39          unsigned char R_t=15;
+  40          unsigned char Y_t=3;
+  41          unsigned char G_t=12;
+  42          //时长暂存变量
+  43          unsigned char t1=0;
+  44          unsigned char t2=0;
+  45          //灯轮换标识
+  46          unsigned char traffic_light_1=1;
+  47          unsigned char traffic_light_2=2;
+  48          //共阴数码管字段
+  49          unsigned char code smgduan[17]=
+  50            {0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+  51            0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71};//显示0~F的值
+  52          
+  53          //数码管轮询用的延时函数  
+  54          void delay(void)
+C51 COMPILER V9.57.0.0   MAIN                                                              08/18/2021 00:35:18 PAGE 2   
+
+  55          {
+  56   1        unsigned char i=0;
+  57   1        while(--i);
+  58   1      }
+  59            
+  60          void display()
+  61          {
+  62   1        //数码管显示函数
+  63   1          CS1=0;CS2=1;CS3=1;CS4=1;
+  64   1          LED_7s=smgduan[t1/10];//数码管十位
+  65   1          delay();
+  66   1          CS1=1;CS2=0;CS3=1;CS4=1;
+  67   1          LED_7s=smgduan[t1%10];//数码管个位
+  68   1          delay();
+  69   1          CS1=1;CS2=1;CS3=0;CS4=1;
+  70   1          LED_7s=smgduan[t2/10];//数码管十位
+  71   1          delay();
+  72   1          CS1=1;CS2=1;CS3=1;CS4=0;
+  73   1          LED_7s=smgduan[t2%10];//数码管个位
+  74   1          delay();
+  75   1      }
+  76            
+  77          //键盘扫描程序
+  78          void keyScan()
+  79          {
+  80   1        unsigned char key;
+  81   1        key = P3&0xf0;
+  82   1        if(key!=0xf0)//有按键按下
+  83   1        {
+  84   2          switch(key)
+  85   2          {
+  86   3            case 0xe0:TR0 = 0;
+  87   3                      t1=R_t;R1=0;G1=1;Y1=1;G3=1;R3=0;//全红
+  88   3                      t2=G_t;R2=0;G2=1;Y2=1;G4=1;R4=0;
+  89   3                      break;
+  90   3            case 0xd0:TR0 = 0;
+  91   3                      t1=R_t;R1=0;G1=1;Y1=1;G3=0;R3=1;//主路绿
+  92   3                      t2=G_t;R2=1;G2=0;Y2=1;G4=1;R4=0;
+  93   3                      break;
+  94   3            case 0xb0:TR0 = 0;
+  95   3                      t1=R_t;R1=1;G1=0;Y1=1;G3=1;R3=0;//辅路绿
+  96   3                      t2=G_t;R2=0;G2=1;Y2=1;G4=0;R4=1;
+  97   3                      break;
+  98   3            case 0x70:
+  99   3                        //初始化红绿灯
+ 100   3                      t1=R_t;R1=0;G1=1;Y1=1;G3=0;R3=1;
+ 101   3                      t2=G_t;R2=1;G2=0;Y2=1;G4=1;R4=0;
+ 102   3                      TR0 = 1;//恢复
+ 103   3                
+ 104   3                      break;
+ 105   3            default:break;
+ 106   3          }
+ 107   2        delay();//延时消抖
+ 108   2        }
+ 109   1      }
+ 110          
+ 111          void main()
+ 112          {
+ 113   1        OLED_Init();//初始化OLED
+ 114   1        OLED_Clear();//清屏 
+ 115   1      
+ 116   1        OLED_ShowHZ(0, 0, 0);
+C51 COMPILER V9.57.0.0   MAIN                                                              08/18/2021 00:35:18 PAGE 3   
+
+ 117   1        OLED_ShowHZ(24, 0, 1);
+ 118   1        OLED_ShowHZ(48, 0, 2);
+ 119   1        OLED_ShowHZ(72, 0, 3);
+ 120   1        OLED_ShowHZ(96, 0, 4);
+ 121   1        OLED_ShowHZ(0, 4, 5);
+ 122   1        OLED_ShowHZ(24, 4, 6);
+ 123   1        OLED_ShowHZ(48, 4, 7);
+ 124   1        OLED_ShowHZ(72, 4, 8);
+ 125   1        OLED_ShowHZ(96, 4, 9);
+ 126   1        
+ 127   1        CS1=0;CS2=0;CS3=0;CS4=0;
+ 128   1        TMOD &=0X0F;
+ 129   1        TMOD |=0x01;
+ 130   1        TH0 = THHL /256;//高四位初值
+ 131   1        TL0 = THHL %256;//低四位初值
+ 132   1        EA = 1;      //开总中断
+ 133   1        ET0 = 1;     //T1开时定时器溢出
+ 134   1        TR0 = 1;     //开启定时器
+ 135   1      
+ 136   1        //初始化红绿灯
+ 137   1        t1=R_t;R1=0;G1=1;Y1=1;G3=0;R3=1;
+ 138   1        t2=G_t;R2=1;G2=0;Y2=1;G4=1;R4=0;
+ 139   1        
+ 140   1        while(1)
+ 141   1        {
+ 142   2          keyScan();
+ 143   2          display();//轮询显示数码管
+ 144   2        };
+ 145   1      }
+ 146          
+ 147          void time_intt1(void) interrupt 1  
+ 148          { 
+ 149   1        TH0=THHL/256;TL0=THHL%256; 
+ 150   1        d--; 
+ 151   1        if(d==0)
+ 152   1        {
+ 153   2          t1--;//交通灯倒计时
+ 154   2          t2--;
+ 155   2          
+ 156   2          if(t1==0)
+ 157   2          {         
+ 158   3            //交通灯显示  
+ 159   3            switch(traffic_light_1)
+ 160   3            {
+ 161   4              case 0:t1=R_t;R1=0;G1=1;Y1=1; G3=0;R3=1;break;
+ 162   4              case 1:t1=G_t;R1=1;G1=0;Y1=1; G3=1;R3=0;break;
+ 163   4              case 2:t1=Y_t;R1=1;G1=1,Y1=0; G3=1;R3=0;break;
+ 164   4            }
+ 165   3            traffic_light_1++;//交通灯颜色切换
+ 166   3            if(traffic_light_1==3)traffic_light_1=0;
+ 167   3          }
+ 168   2          
+ 169   2          if(t2==0)
+ 170   2          {         
+ 171   3            //交通灯显示  
+ 172   3            switch(traffic_light_2)
+ 173   3            {
+ 174   4              case 0:t2=R_t;R2=0;G2=1;Y2=1; G4=0;R4=1;break;
+ 175   4              case 1:t2=G_t;R2=1;G2=0;Y2=1; G4=1;R4=0;break;
+ 176   4              case 2:t2=Y_t;R2=1;G2=1,Y2=0; G4=1;R4=0;break;
+ 177   4            }
+ 178   3            traffic_light_2++;//交通灯颜色切换
+C51 COMPILER V9.57.0.0   MAIN                                                              08/18/2021 00:35:18 PAGE 4   
+
+ 179   3            if(traffic_light_2==3)traffic_light_2=0;
+ 180   3          }
+ 181   2          
+ 182   2          d=20;
+ 183   2        }
+ 184   1      }   
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    551    ----
+   CONSTANT SIZE    =     17    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
