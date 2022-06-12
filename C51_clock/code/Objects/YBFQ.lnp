@@ -1,0 +1,6 @@
+".\Objects\main.obj",
+".\Objects\LCD.obj",
+".\Objects\DS1302.obj",
+".\Objects\DS18B20.obj" 
+TO ".\Objects\YBFQ" 
+PRINT(".\Listings\YBFQ.m51")
